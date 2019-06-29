@@ -9,7 +9,7 @@ function GetAnimePrograms( title, errors ){
       "method" : "get",
       "muteHttpExceptions" : false,
       "validateHttpsCertificates" : false,
-      "followRedirects" : false
+      "followRedirects" : true
     };
     title.request_time = ( new gEase.DateTime() ).ToString();
     var html = UrlFetchApp.fetch( title.url, options ).getContentText( "UTF-8" ).split( "\n" ).join( "" );
@@ -44,7 +44,10 @@ function GetAnimePrograms( title, errors ){
             program.minites = parseInt( array[ 2 ] );
           }break;
           case "start":{
-            program.start = /\>(.+?)\</.exec( array[ 2 ] )[ 1 ];
+            program.start = /\>(.+?)\</.exec( array[ 2 ] )[ 1 ] +" ";
+            var start_time = /; *([0-9\:]+)/.exec( array[ 2 ] );
+            if ( start_time[ 1 ].length < 5 ) start_time[ 1 ] = "0" + start_time[ 1 ];
+            program.start += start_time[ 1 ];
           }break;
           case "count":{
             if ( "" != array[ 2 ] ){
@@ -88,7 +91,7 @@ function GetNewProgramTitles( errors ){
       "method" : "get",
       "muteHttpExceptions" : false,
       "validateHttpsCertificates" : false,
-      "followRedirects" : false
+      "followRedirects" : true
     };
     var html = UrlFetchApp.fetch( url, options ).getContentText( "UTF-8" ).split( "\n" ).join( "" );
     var ol = /\<ol class="titles"\>(.+?)\<\/ol\>/g.exec( html );
@@ -169,7 +172,7 @@ function Main(){
     ++row;
   }
   gEase.each( new_anime_programs, function( new_anime_program ){
-    var record = [ new_anime_program.title.name, new_anime_program.program.broadcaster, new_anime_program.program.start, FlagsToTypes( new_anime_program.program.flags ).join( " " ) ];
+    var record = [ gEase.html_decode( new_anime_program.title.name ), new_anime_program.program.broadcaster, new_anime_program.program.start, FlagsToTypes( new_anime_program.program.flags ).join( " " ) ];
     var range = sheet.SetRecord( ++row, 1, record );
     range.setHorizontalAlignment( "left" );
     range.setVerticalAlignment( "middle" );
